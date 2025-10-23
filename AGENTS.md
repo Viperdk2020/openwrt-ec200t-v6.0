@@ -1,76 +1,195 @@
-# Repository Guidelines
+# AGENTS.md — Codex Cloud for MT7628NN Router
 
-## Project Structure & Module Organization
-Raw flash dumps (`mtd0.bin` – `mtd7.bin`) live at the top level for quick reference. Derived artifacts are grouped by type: decompiled kernel routines in `kernel_*.c`, userland routines in `rc_*.c`, and CSV/string dumps in `String_CSV.cvs`. Ghidra project state is separated by target: `RouterHeadlessProj.*` (kernel analysis), `RouterMtkProj.*` (Mediatek libs), and `RouterUserProj.*` (userland). Automation helpers (`DecompileFunctionHeadless.py`, `DumpXrefs.py`, etc.) sit alongside for easy reuse; keep any new scripts here and name them by action (`DumpFoo.py`).
+> Operational playbook for running Codex Cloud agents to build, wrap, validate, and release OpenWrt firmware for the MT7628NN 4G router project.
 
-## Build, Test, and Analysis Commands
-Ghidra headless workflows run via `analyzeHeadless`. Example:  
-`ghidra/support/analyzeHeadless RouterHeadlessProj.gpr RouterHeadlessProj -import mtd3_vmlinux.bin -scriptPath . -postScript ListFuncs.py`  
-Use `python3 DumpXrefs.py <symbol> <out.json>` from inside Ghidra (Window ▶ Script Manager) to export cross-references. To decompile a function non-interactively:  
-`python3 DecompileFunctionHeadless.py FUN_803136f4 kernel_FUN_803136f4.c` (run through Ghidra’s headless interpreter). When pulling new dumps, keep originals immutable and place experiments in a `work/` subdirectory to avoid overwriting source material. For OpenWrt firmware builds, run `wrap_mt7628_initramfs.sh <image.bin>` (initramfs and sysupgrade) before TFTP or flashing so the MediaTek RAM-boot header matches stock U-Boot expectations.
+## 0) Project Snapshot (shared context)
 
-## Coding Style & Naming Conventions
-Python tooling stays compatible with Ghidra’s Jython runtime—avoid Python 3–only syntax (f-strings, pathlib) unless guarded. Name exports after the symbol being examined (`kernel_<addr>.c`, `rc_<func>.c`) and include comment headers with source offsets if you regenerate files. For CSV notes, prefer ASCII and comma-delimited records so they open cleanly in both spreadsheets and scripts.
+* **Target:** ramips/mt76x8 (MT7628NN)
+* **Bootloader:** Ralink U‑Boot 1.1.3; expects legacy uImage magic `0x27151967`
+* **WAN design:** Wi‑Fi **STA‑only** + 4G PPP fallback (`/dev/ttyUSBx`) + USB ECM/RNDIS fallback
+* **Regulatory:** `country=DK`
+* **Artifacts we ship:** `*-sysupgrade-jbc.bin` (+ optional `*-initramfs-ramboot-jbc.bin`) and README
 
-## Testing Guidelines
-Before committing automation changes, dry-run scripts against `mtd3_vmlinux.bin` and confirm they produce the expected artifacts in `tmp/`. Validate decompilation scripts by diffing regenerated `kernel_*.c` outputs with existing versions. If you introduce parsing logic, add a small fixture under `tests/` (create the directory if needed) and script a `python3 -m pytest` check; keep fixtures under 10 KB to ease sharing.
+## 1) Agents (roles & responsibilities)
 
-## Commit & Pull Request Guidelines
-Use descriptive Conventional Commit prefixes (`feat:`, `fix:`, `docs:`). Commits should capture a single conceptual change: e.g., `feat: add gpio xref dumper`. Provide PR descriptions covering 1) target firmware component, 2) scripts/commands used, 3) verification steps (logs, diff summaries), and 4) follow-up tasks. Avoid checking in proprietary or licensed vendor binaries beyond the minimal firmware segments already tracked; if a new dump is necessary, document its source and checksum in the PR.
+### A. Build Agent — *ImageBuilder orchestrator*
 
-## Hardware Notes & GPIO Map
-MT7628 LEDs are active-low on `gpio0` (3G/front), `gpio2` (WAN/“2G”), `gpio37` (LTE/“4G”), and `gpio44` (Wi-Fi). Keep `gpio1` high—forcing it low power-cycles the Quectel EC200T—while `gpio4` is currently unused. The reset button is wired to `gpio38` (active-low). Switch-port LEDs are driven by the ESW block; program `ESW LED_CTRL{0..2}` at `0x10110030` via `devmem2`/`swconfig` to light LAN0/LAN1. The SIM slot feeds the EC200T directly, so SIM presence and PIN state must be queried through the modem’s USB control ports (`/dev/ttyUSB*`, `wwan0`).
+**Goal:** Produce a lean OpenWrt image with the exact package set and `FILES/` overlay.
 
-## Field Work Tips
-Record all bootloader interactions (TFTP logs, UART captures) in `bootlog.txt` to keep lab context. When experimenting with RAM boots, note the exact image and load/entry addresses used so others can reproduce the state machine quickly.
-- Latest custom OpenWrt artifacts live at `openwrt/bin/targets/ramips/mt76x8/` (`openwrt-ramips-mt76x8-custom_ec200t-*.bin`). Always wrap initramfs and sysupgrade with `wrap_mt7628_initramfs.sh` to get the MTK RAM header before TFTP/flash; the wrapped outputs share the same directory.
-- Before flashing, capture full flash backups. Options: 1) use evaluation initramfs (`openwrt-ramips-mt76x8-mediatek_mt7628an-eval-board-initramfs-kernel-ramboot.bin`) and `dd if=/dev/mtdX of=/tmp/mtdX.bin` followed by `tftp -pl mtdX.bin <host>`, or 2) slice reads in U-Boot via `spi read 0x81000000 <offset> <length> ; tftpput ...`. Store copies under `C:\tftp`.
-- Bootloader artefacts: `Router/mtd0_env_defaults.txt` holds the factory U-Boot environment (bootcmd=tftp, baudrate 57600, placeholder MAC, `ipaddr=192.168.188.1`, `serverip=192.168.188.103`) pulled straight from `mtd0.bin`. `Router/mtd0_bootloader_info.txt` captures the Ralink/JBoneCloud U-Boot banner, dual-slot menu text, and embedded HTTP upgrader HTML. Keep both alongside the raw dump for easy re-seeding of `mtd1` or reference while wrapping images.
-- HTTP updater reference: `Router/mtd0-http-update-strings.txt` lists the HTTP upgrader strings with offsets, and `Router/http_update_analysis.md` summarizes form field names, validation rules, and IP defaults for quick access during lab work.
-- Flash write mapping: `Router/mtd0_flash_write_map.md` walks the HTTP upgrader code paths (entry at `0xBFC011A4`, multipart parser, SPI erase/copy loop) and links the key strings to the relevant `addiu` sites so you can jump straight into the flash-write routine in disassembly.
-- Upstream delta: the same map now carries a comparison against mainline mt7628 U-Boot (lines under “Upstream Comparison”) to help spot what would need rework if we backport the HTTP upgrader to a modern tree.
-- Header packer: use `python3 jbonecloud_wrap.py <sysupgrade.bin> -o <output.bin>` to rewrite the uImage magic to `0x27151967` and refresh both header/data CRCs before flashing; optional flags allow adjusting name/load/entry if the upstream image changes.
-## Modem Init & Diagnostics (ML352/EC200 family on OpenWrt APK)
+* **Inputs:** Profile, package list, `FILES/` overlay tree
+* **Output:** `bin/targets/.../*sysupgrade.bin` (+ initramfs if requested)
+* **Constraints:** Keep IPv6/storage stacks out; include LuCI; Wi‑Fi STA‑only
+* **Prompt Template:**
 
-- GPIO mapping
-  - Sysfs uses base 512 + SoC GPIO number (e.g., SoC `GPIO1` → sysfs `gpio513`).
-  - On this board: `GPIO1` controls modem power (PWR_EN), `GPIO4` is modem reset (RESET_N, active‑low).
-    - Power‑on (observed stable sequence): `echo 1 > /sys/class/gpio/gpio513/value; sleep 8; echo 0 > /sys/class/gpio/gpio513/value`.
-    - Reset pulse (active‑low): export `gpio516`, `direction=out`, then `echo 0; sleep 1; echo 1` to `/sys/class/gpio/gpio516/value`.
+```text
+You are the Build Agent. Using OpenWrt ImageBuilder for ramips/mt76x8:
+1) Select the closest profile (zbt-we5931 or mt7628an-eval). Report which was used.
+2) Build with PACKAGES exactly as listed, and include FILES=files/.
+3) Print the final artifact paths and sha256sums.
+4) Do not wrap images; leave that to the Wrapper Agent.
+```
 
-- USB enumeration and drivers
-  - Typical VID:PID seen on this unit: Marvell/ASR `1286:4e3c` (serial composition). Option driver creates `/dev/ttyUSB0..2`.
-  - Load/bind safely (idempotent):
-    - `modprobe usbserial option cdc_acm 2>/dev/null || true`
-    - `echo '1286 4e3c ff' > /sys/bus/usb-serial/drivers/option/new_id 2>/dev/null || true`
-    - If Quectel‑like: also try `echo '2c7c 6026 ff' > .../option/new_id`.
+### B. Wrapper Agent — *JBoneCloud uImage header fixer*
 
-- Finding the responsive AT port (uses BusyBox socat or microcom)
-  - socat probe: `for p in /dev/ttyUSB3 /dev/ttyUSB2 /dev/ttyUSB1 /dev/ttyUSB0; do printf 'ATE0\r\nATI\r\nAT+CPIN?\r\n' | socat -T 8 - "OPEN:$p,raw,echo=0,crnl" && break; done`.
-  - Common working ports on this hardware: `ttyUSB3` or `ttyUSB1`.
+**Goal:** Wrap the generated images to legacy uImage with magic `0x27151967`, validate hcrc/dcrc.
 
-- Read SIM number (if provisioned) and USSD fallback
-  - SIM record: `printf 'ATE0\r\nAT+CNUM\r\n' | socat -T 8 - "OPEN:$AT_PORT,raw,echo=0,crnl"`.
-  - Network USSD (Lycamobile examples):
-    - `AT+CUSD=1,"*132#",15` then cancel with `AT+CUSD=2`.
-    - Alternates: `*#100#`, `97#`, `*100#` (country‑dependent).
-  - EF_MSISDN (often empty):
-    - FCP/meta: `AT+CRSM=192,28480,0,0,15`; record read: `AT+CRSM=178,28480,1,4,32`.
+* **Inputs:** raw `*sysupgrade.bin` (and/or initramfs)
+* **Output:** `*-jbc.bin` images with fixed magic & CRCs
+* **Prompt Template:**
 
-- Data bring‑up (no QMI/MBIM on ML352)
-  - ECM/NCM present → DHCP on `usb0`: `ip link set usb0 up; udhcpc -n -q -i usb0`.
-  - Otherwise PPP over serial. Minimal peers/chat:
-    - `/etc/ppp/peers/wwan`:
-      - `device /dev/ttyUSB3`
-      - `115200`
-      - `noipdefault\nusepeerdns\nipcp-accept-remote\nipcp-accept-local\nnovj\nnobsdcomp\nnodeflate\npersist\nmaxfail 0\nholdoff 5\nlcp-echo-interval 30\nlcp-echo-failure 6\nlcp-echo-adaptive\ndefaultroute`
-      - `connect "/usr/sbin/chat -v -s -S -t 45 -f /etc/ppp/chatscripts/wwan.chat"`
-    - `/etc/ppp/chatscripts/wwan.chat`:
-      - `ABORT "BUSY"\nABORT "NO CARRIER"\nABORT "NO DIALTONE"\nABORT "ERROR"\nABORT "NO ANSWER"\n"" ATZ\nOK 'AT+CGDCONT=1,"IP","<your-apn>"'\nOK ATD*99#\nCONNECT ""`
-    - Bring up: `pppd call wwan`.
+```text
+You are the Wrapper Agent. Run the Python wrapper:
+python3 jbonecloud_wrap.py <in-sysupgrade.bin> -o <out-sysupgrade-jbc.bin>
+Repeat for initramfs if present. Print magic/hcrc/dcrc/size summary lines.
+```
 
-- Troubleshooting tips
-  - If `/dev/ttyUSB*` don’t appear but dmesg shows `usb 1-1` attach: ensure PWR_EN is held in the ON state and re‑bind `option` with the current VID:PID.
-  - If USSD payload is UCS2 hex, decode with `iconv` (or paste into the repo notes and decode offline).
-  - This OpenWrt uses `apk`; if `socat` is missing, install when WAN is up: `apk update; apk add socat` (or use BusyBox `microcom`).
+### C. Config Agent — *Default configs & overlays*
 
+**Goal:** Generate `FILES/` overlay for STA-only Wi‑Fi + PPP/ECM/RNDIS fallbacks and firewall.
+
+* **Inputs:** SSID/PSK placeholders, APN, device nodes
+* **Output:** `files/etc/config/{wireless,network,firewall,dhcp}`, ppp peers/chatscripts, usb hotplug rules
+* **Prompt Template:**
+
+```text
+You are the Config Agent. Create a files/ overlay with:
+- STA-only wireless (country DK), no AP.
+- network: lan bridge @ 192.168.1.1/24; wwan (dhcp, metric 10); cell (ppp on /dev/ttyUSB3, metric 20); wan_usb (usb0 dhcp, metric 30).
+- firewall: lan->wan masquerade, zones {lan,wan} (wwan/cell/wan_usb).
+- dhcp: LAN only.
+- ppp: peers/chatscripts for APN=YOUR_APN, *99#.
+- hotplug.d/usb: load option, cdc_ether, rndis_host; bind IDs 1286:4e3c and optionally 2c7c:6026.
+Package the tree and print file contents inline.
+```
+
+### D. QA Agent — *Boot & connectivity checks*
+
+**Goal:** Validate images and defaults before release; ensure both Wi‑Fi and 4G paths work.
+
+* **Inputs:** jbc‑wrapped images, device boot logs, `ifstatus`/`logread`
+* **Output:** A checklist report with pass/fail and next steps
+* **Prompt Template:**
+
+```text
+You are the QA Agent. Verify:
+- Wrapper summary shows magic 0x27151967, valid hcrc/dcrc.
+- First boot: wlan STA associates and obtains DHCP (ifstatus wwan).
+- Fallback: with Wi‑Fi down, `pppd call cell` brings up ppp0; with ECM/RNDIS modem, usb0 DHCP works.
+- LuCI reachable at 192.168.1.1.
+Produce a PASS/FAIL report and paste key log excerpts.
+```
+
+### E. Release Agent — *Packaging & notes*
+
+**Goal:** Emit final deliverables & concise README with flashing steps.
+
+* **Inputs:** final images, QA report
+* **Output:**
+
+  * `*-sysupgrade-jbc.bin` (and initramfs‑jbc if applicable)
+  * `README.md` with: profile, Wi‑Fi defaults, flashing via TFTP RAM‑boot + `sysupgrade -n`, recovery tip
+* **Prompt Template:**
+
+```text
+You are the Release Agent. Publish artifact filenames with sha256sums and sizes. Generate a README:
+- Exact PROFILE used
+- Wi‑Fi STA placeholder SSID/KEY
+- 4G APN placeholder and where to change it
+- Bootloader flow: tftpboot to RAM then sysupgrade -n
+- Recovery section (enter U-Boot, tftpboot, etc.)
+```
+
+## 2) Standard Inputs & Environment
+
+* **Profiles to try:** `zbt-we5931` → `mt7628an-eval` (fallback)
+* **Kernel ABI:** derive from ImageBuilder release in use
+* **Time zone:** Europe/Copenhagen
+* **Output directory convention:** `bin/targets/ramips/mt76x8/`
+
+## 3) Canonical Package Set
+
+Add: `ppp chat kmod-usb-core kmod-usb2 kmod-usb-serial kmod-usb-serial-option kmod-usb-acm usb-modeswitch kmod-usb-net kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-mt76 wpad-basic-mbedtls firewall4 nftables kmod-nft-nat dnsmasq-full dropbear logd ip-full swconfig luci luci-ssl uhttpd ca-bundle luci-mod-network luci-app-firewall luci-proto-ppp`
+
+Remove: `odhcp6c luci-proto-ipv6 kmod-ipv6 ppp-mod-pppoe ppp-mod-pppoa kmod-usb-storage block-mount kmod-fs-ext4 kmod-fs-vfat uqmi umbim kmod-usb-net-qmi-wwan kmod-usb-net-cdc-mbim relayd kmod-ath9k kmod-ath10k-ct kmod-brcmfmac`
+
+## 4) Core Workflows
+
+### Workflow A — Fresh build
+
+1. **Config Agent** produces `files/` overlay.
+2. **Build Agent** runs ImageBuilder with PACKAGES + `FILES=files/`.
+3. **Wrapper Agent** wraps sysupgrade/initramfs → `*-jbc.bin`.
+4. **QA Agent** validates.
+5. **Release Agent** emits README and checksums.
+
+### Workflow B — Config tweak only
+
+1. Update overlay files. 2. Re‑ImageBuilder. 3. Wrap. 4. QA. 5. Release.
+
+## 5) Checklists
+
+**Build Agent**
+
+* [ ] Correct profile selected & reported
+* [ ] Package diff matches canonical set
+* [ ] `sha256sums` recorded
+
+**Wrapper Agent**
+
+* [ ] Magic `0x27151967`
+* [ ] hcrc/dcrc valid
+* [ ] Sizes sensible
+
+**QA Agent**
+
+* [ ] `ifstatus wwan` has lease
+* [ ] `ppp0` comes up with APN
+* [ ] `usb0` DHCP works (if modem exposes ECM/RNDIS)
+* [ ] LuCI reachable, firewall zones correct
+
+**Release Agent**
+
+* [ ] Filenames/versioning
+* [ ] README covers TFTP RAM‑boot + `sysupgrade -n`
+* [ ] Recovery notes present
+
+## 6) Command Snippets (ready to paste)
+
+**ImageBuilder (example)**
+
+```sh
+make image PROFILE="zbt-we5931" \
+  PACKAGES="ppp chat kmod-usb-core kmod-usb2 kmod-usb-serial kmod-usb-serial-option kmod-usb-acm usb-modeswitch kmod-usb-net kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-mt76 wpad-basic-mbedtls firewall4 nftables kmod-nft-nat dnsmasq-full dropbear logd ip-full swconfig luci luci-ssl uhttpd ca-bundle luci-mod-network luci-app-firewall luci-proto-ppp" \
+  FILES=files/
+```
+
+**Wrap to legacy uImage (magic 0x27151967)**
+
+```sh
+python3 jbonecloud_wrap.py bin/targets/*/*/*-sysupgrade.bin \
+  -o bin/targets/.../openwrt-sysupgrade-jbc.bin
+```
+
+**Quick verify**
+
+```sh
+# Expect wrapper summary lines to show magic 0x27151967 and valid hcrc/dcrc
+sha256sum bin/targets/.../*jbc.bin
+```
+
+## 7) Conventions & Style
+
+* Prefer STA‑only Wi‑Fi (no AP) to keep RF stable.
+* Keep logs concise; paste only the decisive 10–20 lines.
+* Use placeholders: `UPSTREAM_SSID`, `UPSTREAM_PASSWORD`, `YOUR_APN`.
+
+## 8) Glossary
+
+* **ImageBuilder:** Prebuilt SDK to assemble images without full source build
+* **jbc wrap:** Our legacy uImage header fix for the vendor bootloader
+* **STA:** Wi‑Fi station (client) mode
+* **ECM/RNDIS:** USB networking modes exposed by some modems
+
+---
+
+*Edit this file as the single source of truth for how Codex agents should operate on this project.*
