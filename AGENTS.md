@@ -1,195 +1,207 @@
-# AGENTS.md — Codex Cloud for MT7628NN Router
+# AGENTS.md — Source Build Mode (MT7628NN)
 
-> Operational playbook for running Codex Cloud agents to build, wrap, validate, and release OpenWrt firmware for the MT7628NN 4G router project.
-
-## 0) Project Snapshot (shared context)
-
-* **Target:** ramips/mt76x8 (MT7628NN)
-* **Bootloader:** Ralink U‑Boot 1.1.3; expects legacy uImage magic `0x27151967`
-* **WAN design:** Wi‑Fi **STA‑only** + 4G PPP fallback (`/dev/ttyUSBx`) + USB ECM/RNDIS fallback
-* **Regulatory:** `country=DK`
-* **Artifacts we ship:** `*-sysupgrade-jbc.bin` (+ optional `*-initramfs-ramboot-jbc.bin`) and README
-
-## 1) Agents (roles & responsibilities)
-
-### A. Build Agent — *ImageBuilder orchestrator*
-
-**Goal:** Produce a lean OpenWrt image with the exact package set and `FILES/` overlay.
-
-* **Inputs:** Profile, package list, `FILES/` overlay tree
-* **Output:** `bin/targets/.../*sysupgrade.bin` (+ initramfs if requested)
-* **Constraints:** Keep IPv6/storage stacks out; include LuCI; Wi‑Fi STA‑only
-* **Prompt Template:**
-
-```text
-You are the Build Agent. Using OpenWrt ImageBuilder for ramips/mt76x8:
-1) Select the closest profile (zbt-we5931 or mt7628an-eval). Report which was used.
-2) Build with PACKAGES exactly as listed, and include FILES=files/.
-3) Print the final artifact paths and sha256sums.
-4) Do not wrap images; leave that to the Wrapper Agent.
-```
-
-### B. Wrapper Agent — *JBoneCloud uImage header fixer*
-
-**Goal:** Wrap the generated images to legacy uImage with magic `0x27151967`, validate hcrc/dcrc.
-
-* **Inputs:** raw `*sysupgrade.bin` (and/or initramfs)
-* **Output:** `*-jbc.bin` images with fixed magic & CRCs
-* **Prompt Template:**
-
-```text
-You are the Wrapper Agent. Run the Python wrapper:
-python3 jbonecloud_wrap.py <in-sysupgrade.bin> -o <out-sysupgrade-jbc.bin>
-Repeat for initramfs if present. Print magic/hcrc/dcrc/size summary lines.
-```
-
-### C. Config Agent — *Default configs & overlays*
-
-**Goal:** Generate `FILES/` overlay for STA-only Wi‑Fi + PPP/ECM/RNDIS fallbacks and firewall.
-
-* **Inputs:** SSID/PSK placeholders, APN, device nodes
-* **Output:** `files/etc/config/{wireless,network,firewall,dhcp}`, ppp peers/chatscripts, usb hotplug rules
-* **Prompt Template:**
-
-```text
-You are the Config Agent. Create a files/ overlay with:
-- STA-only wireless (country DK), no AP.
-- network: lan bridge @ 192.168.1.1/24; wwan (dhcp, metric 10); cell (ppp on /dev/ttyUSB3, metric 20); wan_usb (usb0 dhcp, metric 30).
-- firewall: lan->wan masquerade, zones {lan,wan} (wwan/cell/wan_usb).
-- dhcp: LAN only.
-- ppp: peers/chatscripts for APN=YOUR_APN, *99#.
-- hotplug.d/usb: load option, cdc_ether, rndis_host; bind IDs 1286:4e3c and optionally 2c7c:6026.
-Package the tree and print file contents inline.
-```
-
-### D. QA Agent — *Boot & connectivity checks*
-
-**Goal:** Validate images and defaults before release; ensure both Wi‑Fi and 4G paths work.
-
-* **Inputs:** jbc‑wrapped images, device boot logs, `ifstatus`/`logread`
-* **Output:** A checklist report with pass/fail and next steps
-* **Prompt Template:**
-
-```text
-You are the QA Agent. Verify:
-- Wrapper summary shows magic 0x27151967, valid hcrc/dcrc.
-- First boot: wlan STA associates and obtains DHCP (ifstatus wwan).
-- Fallback: with Wi‑Fi down, `pppd call cell` brings up ppp0; with ECM/RNDIS modem, usb0 DHCP works.
-- LuCI reachable at 192.168.1.1.
-Produce a PASS/FAIL report and paste key log excerpts.
-```
-
-### E. Release Agent — *Packaging & notes*
-
-**Goal:** Emit final deliverables & concise README with flashing steps.
-
-* **Inputs:** final images, QA report
-* **Output:**
-
-  * `*-sysupgrade-jbc.bin` (and initramfs‑jbc if applicable)
-  * `README.md` with: profile, Wi‑Fi defaults, flashing via TFTP RAM‑boot + `sysupgrade -n`, recovery tip
-* **Prompt Template:**
-
-```text
-You are the Release Agent. Publish artifact filenames with sha256sums and sizes. Generate a README:
-- Exact PROFILE used
-- Wi‑Fi STA placeholder SSID/KEY
-- 4G APN placeholder and where to change it
-- Bootloader flow: tftpboot to RAM then sysupgrade -n
-- Recovery section (enter U-Boot, tftpboot, etc.)
-```
-
-## 2) Standard Inputs & Environment
-
-* **Profiles to try:** `zbt-we5931` → `mt7628an-eval` (fallback)
-* **Kernel ABI:** derive from ImageBuilder release in use
-* **Time zone:** Europe/Copenhagen
-* **Output directory convention:** `bin/targets/ramips/mt76x8/`
-
-## 3) Canonical Package Set
-
-Add: `ppp chat kmod-usb-core kmod-usb2 kmod-usb-serial kmod-usb-serial-option kmod-usb-acm usb-modeswitch kmod-usb-net kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-mt76 wpad-basic-mbedtls firewall4 nftables kmod-nft-nat dnsmasq-full dropbear logd ip-full swconfig luci luci-ssl uhttpd ca-bundle luci-mod-network luci-app-firewall luci-proto-ppp`
-
-Remove: `odhcp6c luci-proto-ipv6 kmod-ipv6 ppp-mod-pppoe ppp-mod-pppoa kmod-usb-storage block-mount kmod-fs-ext4 kmod-fs-vfat uqmi umbim kmod-usb-net-qmi-wwan kmod-usb-net-cdc-mbim relayd kmod-ath9k kmod-ath10k-ct kmod-brcmfmac`
-
-## 4) Core Workflows
-
-### Workflow A — Fresh build
-
-1. **Config Agent** produces `files/` overlay.
-2. **Build Agent** runs ImageBuilder with PACKAGES + `FILES=files/`.
-3. **Wrapper Agent** wraps sysupgrade/initramfs → `*-jbc.bin`.
-4. **QA Agent** validates.
-5. **Release Agent** emits README and checksums.
-
-### Workflow B — Config tweak only
-
-1. Update overlay files. 2. Re‑ImageBuilder. 3. Wrap. 4. QA. 5. Release.
-
-## 5) Checklists
-
-**Build Agent**
-
-* [ ] Correct profile selected & reported
-* [ ] Package diff matches canonical set
-* [ ] `sha256sums` recorded
-
-**Wrapper Agent**
-
-* [ ] Magic `0x27151967`
-* [ ] hcrc/dcrc valid
-* [ ] Sizes sensible
-
-**QA Agent**
-
-* [ ] `ifstatus wwan` has lease
-* [ ] `ppp0` comes up with APN
-* [ ] `usb0` DHCP works (if modem exposes ECM/RNDIS)
-* [ ] LuCI reachable, firewall zones correct
-
-**Release Agent**
-
-* [ ] Filenames/versioning
-* [ ] README covers TFTP RAM‑boot + `sysupgrade -n`
-* [ ] Recovery notes present
-
-## 6) Command Snippets (ready to paste)
-
-**ImageBuilder (example)**
-
-```sh
-make image PROFILE="zbt-we5931" \
-  PACKAGES="ppp chat kmod-usb-core kmod-usb2 kmod-usb-serial kmod-usb-serial-option kmod-usb-acm usb-modeswitch kmod-usb-net kmod-usb-net-cdc-ether kmod-usb-net-rndis kmod-mt76 wpad-basic-mbedtls firewall4 nftables kmod-nft-nat dnsmasq-full dropbear logd ip-full swconfig luci luci-ssl uhttpd ca-bundle luci-mod-network luci-app-firewall luci-proto-ppp" \
-  FILES=files/
-```
-
-**Wrap to legacy uImage (magic 0x27151967)**
-
-```sh
-python3 jbonecloud_wrap.py bin/targets/*/*/*-sysupgrade.bin \
-  -o bin/targets/.../openwrt-sysupgrade-jbc.bin
-```
-
-**Quick verify**
-
-```sh
-# Expect wrapper summary lines to show magic 0x27151967 and valid hcrc/dcrc
-sha256sum bin/targets/.../*jbc.bin
-```
-
-## 7) Conventions & Style
-
-* Prefer STA‑only Wi‑Fi (no AP) to keep RF stable.
-* Keep logs concise; paste only the decisive 10–20 lines.
-* Use placeholders: `UPSTREAM_SSID`, `UPSTREAM_PASSWORD`, `YOUR_APN`.
-
-## 8) Glossary
-
-* **ImageBuilder:** Prebuilt SDK to assemble images without full source build
-* **jbc wrap:** Our legacy uImage header fix for the vendor bootloader
-* **STA:** Wi‑Fi station (client) mode
-* **ECM/RNDIS:** USB networking modes exposed by some modems
+Operational playbook for Codex Cloud **source builds** of OpenWrt for the MT7628NN 4G router. This replaces ImageBuilder-centric flows.
 
 ---
 
-*Edit this file as the single source of truth for how Codex agents should operate on this project.*
+## 0) Project Snapshot
+
+* **Target/Subtarget:** `ramips/mt76x8` (MT7628NN)
+* **Bootloader:** Ralink U‑Boot 1.1.3, expects legacy uImage **magic `0x27151967`** with valid hcrc/dcrc (we wrap post-build)
+* **WAN design:** Wi‑Fi **STA‑only** + 4G PPP (`/dev/ttyUSBx`) + USB ECM/RNDIS fallback
+* **Region:** `country=DK`
+* **Primary profile:** `zbt-we5931` → fallback `mediatek_mt7628an-eval`
+* **Kernel ABI:** from source branch (keep kmods consistent)
+* **Artifacts:** `*-sysupgrade-jbc.bin` (+ optional `*-initramfs-ramboot-jbc.bin`), `sha256sums.txt`, `README.md`
+
+---
+
+## 1) Agents (roles & prompts)
+
+### A) **Repo Agent** — *Clone & prepare tree*
+
+**Goal:** Clone OpenWrt sources + feeds on the requested branch.
+
+* **Inputs:** `OPENWRT_GIT`, `OPENWRT_BRANCH`
+* **Output:** Ready source tree in `${SRC_DIR}`
+* **Prompt template:**
+
+```
+You are the Repo Agent. Clone the OpenWrt repo (branch ${OPENWRT_BRANCH}) into ${SRC_DIR}. Run `./scripts/feeds update -a && ./scripts/feeds install -a`. Print commit and feed refs.
+```
+
+### B) **Config Agent** — *Generate .config + FILES overlay*
+
+**Goal:** Produce `.config` targeting `ramips/mt76x8` and our package set; create `FILES/` overlay for STA-only + PPP/ECM/RNDIS.
+
+* **Inputs:** `TARGET`, `SUBTARGET`, `PROFILE`, SSID/PSK placeholders, `APN`
+* **Output:** `.config`, `files/etc/config/{wireless,network,firewall,dhcp}`, `files/etc/ppp/*`, `files/etc/hotplug.d/usb/10-modem-bind`
+* **Prompt template:**
+
+```
+You are the Config Agent. Write .config enabling: luci, firewall4/nft, mt76, wpad-basic-mbedtls, ppp/chat, USB serial + ACM, USB net (cdc-ether, rndis). Explicitly omit IPv6, storage, QMI/MBIM. Generate FILES overlay for STA-only (DK), wwan dhcp metric 10, ppp cell on /dev/ttyUSB3 metric 20, usb0 dhcp metric 30, firewall lan->wan, dhcp on lan only, chatscripts with APN placeholder, usb hotplug binding 1286:4e3c and optional 2c7c:6026. Print all files.
+```
+
+### C) **Build Agent** — *Compile from source*
+
+**Goal:** Build OpenWrt with the produced `.config`.
+
+* **Inputs:** source tree, toolchain, `.config`
+* **Output:** `bin/targets/ramips/mt76x8/*sysupgrade.bin` (+ initramfs if configured)
+* **Prompt template:**
+
+```
+You are the Build Agent. Run `make defconfig` then `make -j$(nproc) V=s`. If the selected PROFILE fails, switch to `mediatek_mt7628an-eval`, re-run defconfig and build. Print the artifact directory and sizes.
+```
+
+### D) **Wrapper Agent** — *Legacy uImage header fix*
+
+**Goal:** Wrap images to legacy uImage (magic 0x27151967) and recompute both CRCs.
+
+* **Inputs:** raw sysupgrade/initramfs images, `jbonecloud_wrap.py`
+* **Output:** `*-jbc.bin`
+* **Prompt template:**
+
+```
+You are the Wrapper Agent. For each sysupgrade/initramfs image, run `python3 scripts/jbonecloud_wrap.py <in> <out>`. Print the summary (magic, hcrc, dcrc, size).
+```
+
+### E) **QA Agent** — *Sanity & connectivity*
+
+**Goal:** Verify header wrap + boot/connectivity basics.
+
+* **Inputs:** wrapper summaries, first-boot logs/commands
+* **Output:** PASS/FAIL report with next steps
+* **Prompt template:**
+
+```
+You are the QA Agent. Confirm wrapper reported magic 0x27151967 and valid CRCs. On device: ensure STA gets DHCP (`ifstatus wwan`), PPP fallback works (`pppd call cell` → ppp0), ECM/RNDIS DHCP on usb0 works when exposed, LuCI reachable at 192.168.1.1. Paste key log lines only.
+```
+
+### F) **Release Agent** — *Publish & document*
+
+**Goal:** Emit checksums and README with flashing instructions.
+
+* **Inputs:** wrapped images, QA status
+* **Output:** `sha256sums.txt`, `README.md`
+* **Prompt template:**
+
+```
+You are the Release Agent. Produce sha256sums for all *jbc.bin files. Generate README with: profile used; Wi‑Fi STA placeholders; APN placeholder and where to change; safe flashing path (U‑Boot tftp RAM‑boot → sysupgrade -n); recovery note. List final artifact names and sizes.
+```
+
+### G) **Maintenance Agent** — *Cached container refresh (optional)*
+
+**Goal:** On cached containers, refresh minimal tools, feeds, ccache, optional swap.
+
+* **Prompt hint:** run lightweight updates and `./scripts/feeds update -a && install -a` if `${SRC_DIR}` exists.
+
+---
+
+## 2) Environment & Variables
+
+Set as Codex env vars or inline in prompts:
+
+```
+OPENWRT_GIT=https://git.openwrt.org/openwrt/openwrt.git
+OPENWRT_BRANCH=openwrt-24.10
+TARGET=ramips
+SUBTARGET=mt76x8
+PROFILE=zbt-we5931            # fallback: mediatek_mt7628an-eval
+SRC_DIR=$PWD/openwrt-src
+STA_SSID=UPSTREAM_SSID
+STA_KEY=UPSTREAM_PASSWORD
+APN=YOUR_APN
+TZ=Europe/Copenhagen
+```
+
+**Host deps (apt):** `build-essential g++ gawk wget unzip rsync python3 git gettext libncurses5-dev zlib1g-dev file flex bison patch xz-utils tar curl ccache ca-certificates time`
+
+---
+
+## 3) Canonical Package Policy
+
+* **Include:** luci, luci-ssl, uhttpd, dnsmasq-full, firewall4, nftables, kmod-nft-nat, dropbear, ip-full, swconfig, kmod-mt76, wpad-basic-mbedtls, ppp, chat, kmod-usb-core, kmod-usb2, kmod-usb-serial, kmod-usb-serial-option, kmod-usb-acm, usb-modeswitch, kmod-usb-net, kmod-usb-net-cdc-ether, kmod-usb-net-rndis
+* **Exclude:** odhcp6c, luci-proto-ipv6, kmod-ipv6, ppp-mod-pppoe, ppp-mod-pppoa, kmod-usb-storage, block-mount, kmod-fs-ext4, kmod-fs-vfat, uqmi, umbim, kmod-usb-net-qmi-wwan, kmod-usb-net-cdc-mbim, relayd, ath/brcm wifi kmods
+
+---
+
+## 4) Workflows
+
+### Workflow A — Fresh **source** build
+
+1. **Repo Agent** → clone + feeds
+2. **Config Agent** → `.config` + `FILES/`
+3. **Build Agent** → compile (fallback profile if needed)
+4. **Wrapper Agent** → `*-jbc.bin`
+5. **QA Agent** → sanity checks
+6. **Release Agent** → checksums + README
+
+### Workflow B — Config-only tweak
+
+1. Update overlay; 2. re-`make` (no toolchain rebuild); 3. wrap; 4. QA; 5. release
+
+---
+
+## 5) Checklists
+
+**Repo Agent**
+
+* [ ] Correct branch cloned; feeds updated/installed
+
+**Config Agent**
+
+* [ ] `.config` targets ramips/mt76x8; profile set
+* [ ] Packages match policy; FILES overlay complete
+
+**Build Agent**
+
+* [ ] `make defconfig` successful; build completes
+* [ ] Fallback profile attempted if primary fails
+
+**Wrapper Agent**
+
+* [ ] Magic `0x27151967` shown
+* [ ] hcrc/dcrc valid; sizes sensible
+
+**QA Agent**
+
+* [ ] `ifstatus wwan` has DHCP lease
+* [ ] `ppp0` comes up with APN
+* [ ] `usb0` DHCP works when modem exposes ECM/RNDIS
+* [ ] LuCI reachable; firewall zones correct
+
+**Release Agent**
+
+* [ ] sha256sums emitted
+* [ ] README includes flashing + recovery
+* [ ] Filenames and sizes listed
+
+---
+
+## 6) Standard Commands (reference)
+
+```sh
+# Build
+make defconfig
+make -j"$(nproc)" V=s
+
+# Wrap to legacy uImage
+python3 scripts/jbonecloud_wrap.py bin/targets/*/*/*sysupgrade*.bin \
+  bin/targets/.../openwrt-sysupgrade-jbc.bin
+
+# Verify
+sha256sum bin/targets/.../*jbc.bin
+```
+
+---
+
+## 7) Conventions
+
+* Keep logs concise; paste only decisive lines.
+* Use placeholders (`UPSTREAM_SSID`, `UPSTREAM_PASSWORD`, `YOUR_APN`).
+* Prefer **HT20** unless spectrum is clean; disable powersave & legacy rates by default.
+
+---
+
+*Save this file at the repo root as `AGENTS.md`.*
