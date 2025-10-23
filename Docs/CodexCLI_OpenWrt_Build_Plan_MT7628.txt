@@ -1,9 +1,10 @@
 CodexCLI OpenWrt Build Plan — MT7628 (ramips/mt76x8)
 
 Goal
-- Routed WAN over Wi‑Fi STA, Wi‑Fi AP (same radio), Ethernet LAN.
+- Routed WAN over Wi‑Fi STA, Ethernet LAN.
 - 4G fallback via PPP over /dev/ttyUSBx. ECM/RNDIS DHCP fallback enabled.
-- Include LuCI. Strip IPv6, USB storage, unused PPP flavors, non‑MT76 Wi‑Fi drivers.
+- Include LuCI. 
+- Strip IPv6, USB storage, unused PPP flavors.
 - Country: Denmark (DK).
 
 Target / Profile
@@ -31,8 +32,6 @@ make image PROFILE="mediatek_mt7628an-eval-board" \
   FILES=files/
 
 Wireless/Network defaults
-- STA WAN: SSID "P9000", key "heylotte" (change as needed).
-- AP LAN: SSID "OpenWrt-AP", key "changeme123" (change as needed).
 - Country: DK, ieee80211w off for compatibility.
 - Route priority (lower is preferred): wwan=10, cell PPP=20, usb0 ECM/RNDIS=30.
 
@@ -45,23 +44,15 @@ config wifi-device 'radio0'
     option country 'DK'
     option txpower '20'
 
-# AP on LAN
-config wifi-iface
-    option device 'radio0'
-    option mode 'ap'
-    option network 'lan'
-    option ssid 'OpenWrt-AP'
-    option encryption 'psk2'
-    option key 'changeme123'
 
 # STA as routed WAN
 config wifi-iface
     option device 'radio0'
     option mode 'sta'
     option network 'wwan'
-    option ssid 'P9000'
+    option ssid 'test'
     option encryption 'psk2'
-    option key 'heylotte'
+    option key 'test'
     option ieee80211w '0'
 END FILE
 
