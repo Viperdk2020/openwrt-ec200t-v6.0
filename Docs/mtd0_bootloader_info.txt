@@ -1,0 +1,9 @@
+[0x17540] U-Boot 1.1.3 (Apr  2 2021 - 10:40:12)
+
+[0x17673] Web UI snippet:
+<!DOCTYPE HTML><html><head><meta charset="utf-8"><title>U-Boot update</title><link rel="stylesheet" href="style.css"></head><body><div id="m"><h1>U-BOOT UPDATE</h1><p>You are going to update <strong>U-Boot bootloader</strong> on the device.<br>Please, choose file from your local hard drive and click <strong>Update U-Boot</strong> button.</p><form method="post" enctype="multipart/form-data"><input type="file" name="uboot"><input type="submit" value="Update U-Boot"></form><div class="i w"><strong>WARNINGS</strong><ul><li>do not power off the device during update</li><li>if everything goes well, 
+
+[0x1912d] Please choose the operation: 
+
+
+[0x197b8] Ralink UBoot Version: %s

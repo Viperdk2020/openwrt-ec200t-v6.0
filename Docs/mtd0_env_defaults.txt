@@ -1,0 +1,6 @@
+bootcmd=tftp
+bootdelay=1
+baudrate=57600
+ethaddr="00:AA:BB:CC:DD:40"
+ipaddr=192.168.188.1
+serverip=192.168.188.103

@@ -1,0 +1,237 @@
+[    0.000000] Linux version 6.12.51 (root@DESKTOP-BUHQSUQ) (mipsel-openwrt-linux-musl-gcc (OpenWrt GCC 14.3.0 r0-297057f) 14.3.0, GNU ld (GNU Binutils) 2.44) #0 Mon Oct 13 09:47:08 2025
+[    0.000000] Board has DDR2
+[    0.000000] Analog PMU set to hw control
+[    0.000000] Digital PMU set to hw control
+[    0.000000] SoC Type: MediaTek MT7628AN ver:1 eco:2
+[    0.000000] printk: legacy bootconsole [early0] enabled
+[    0.000000] CPU0 revision is: 00019655 (MIPS 24KEc)
+[    0.000000] MIPS: machine is Custom MT7628 EC200T LTE Router
+[    0.000000] Initrd not found or empty - disabling initrd
+[    0.000000] Primary instruction cache 64kB, VIPT, 4-way, linesize 32 bytes.
+[    0.000000] Primary data cache 32kB, 4-way, PIPT, no aliases, linesize 32 bytes
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000000000000-0x0000000003ffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x0000000003ffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x0000000003ffffff]
+[    0.000000] OF: reserved mem: Reserved memory: No reserved-memory node in the DT
+[    0.000000] pcpu-alloc: s0 r0 d32768 u32768 alloc=1*32768
+[    0.000000] pcpu-alloc: [0] 0 
+[    0.000000] Kernel command line: console=ttyS0,57600 rootfstype=squashfs,jffs2
+[    0.000000] Dentry cache hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.000000] Writing ErrCtl register=0006ebaa
+[    0.000000] Readback ErrCtl register=0006ebaa
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 16384
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] RCU Tasks Trace: Setting shift to 0 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=1.
+[    0.000000] NR_IRQS: 256
+[    0.000000] intc: using register map from devicetree
+[    0.000000] CPU Clock: 580MHz
+[    0.000000] clocksource: MIPS: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 6590553264 ns
+[    0.000002] sched_clock: 32 bits at 290MHz, resolution 3ns, wraps every 7405115902ns
+[    0.015451] Calibrating delay loop... 385.84 BogoMIPS (lpj=1929216)
+[    0.087628] pid_max: default: 32768 minimum: 301
+[    0.106563] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.120935] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.148345] Memory: 56912K/65536K available (4740K kernel code, 571K rwdata, 764K rodata, 1212K init, 198K bss, 8152K reserved, 0K cma-reserved)
+[    0.179802] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.199243] futex hash table entries: 256 (order: -1, 3072 bytes, linear)
+[    0.218449] pinctrl core: initialized pinctrl subsystem
+[    0.232165] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.248202] /pinctrl: Fixed dependency cycle(s) with /pinctrl/pinctrl0
+[    0.262130] mt76x8-pinctrl pinctrl: there is not valid maps for state default
+[    0.292950] clocksource: Switched to clocksource MIPS
+[    0.316472] NET: Registered PF_INET protocol family
+[    0.326434] IP idents hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    0.341884] tcp_listen_portaddr_hash hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.358590] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.373835] TCP established hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.388969] TCP bind hash table entries: 1024 (order: 1, 8192 bytes, linear)
+[    0.402914] TCP: Hash tables configured (established 1024 bind 1024)
+[    0.415659] UDP hash table entries: 256 (order: 0, 4096 bytes, linear)
+[    0.428561] UDP-Lite hash table entries: 256 (order: 0, 4096 bytes, linear)
+[    0.443312] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.454493] PCI: CLS 0 bytes, default 32
+[    0.466810] workingset: timestamp_bits=30 max_order=14 bucket_order=0
+[    0.480092] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    0.491547] jffs2: version 2.2 (NAND) (SUMMARY) (LZMA) (RTIME) (CMODE_PRIORITY) (c) 2001-2006 Red Hat, Inc.
+[    0.515966] mt7621_gpio 10000600.gpio: registering 32 gpios
+[    0.527336] mt7621_gpio 10000600.gpio: registering 32 gpios
+[    0.538748] mt7621_gpio 10000600.gpio: registering 32 gpios
+[    0.550801] Serial: 8250/16550 driver, 3 ports, IRQ sharing disabled
+[    0.565897] printk: legacy console [ttyS0] disabled
+[    0.576357] 10000c00.uart0: ttyS0 at MMIO 0x10000c00 (irq = 28, base_baud = 2500000) is a 16550A
+[    0.593791] printk: legacy console [ttyS0] enabled
+[    0.612638] printk: legacy bootconsole [early0] disabled
+[    0.646170] spi-mt7621 10000b00.spi: sys_freq: 193333333
+[    0.661594] 4 fixed-partitions partitions found on MTD device spi0.0
+[    0.674745] Creating 4 MTD partitions on "spi0.0":
+[    0.684318] 0x000000000000-0x000000030000 : "u-boot"
+[    0.697327] 0x000000030000-0x000000040000 : "u-boot-env"
+[    0.709983] 0x000000040000-0x000000050000 : "factory"
+[    0.722623] 0x000000050000-0x000001000000 : "firmware"
+[    0.735346] 2 uimage-fw partitions found on MTD device firmware
+[    0.747205] Creating 2 MTD partitions on "firmware":
+[    0.757066] 0x000000000000-0x000000200000 : "kernel"
+[    0.768894] 0x000000200000-0x000000fb0000 : "rootfs"
+[    0.780571] mtd: setting mtd5 (rootfs) as root device
+[    0.790788] 1 squashfs-split partitions found on MTD device rootfs
+[    0.803192] 0x000000670000-0x000000fb0000 : "rootfs_data"
+[    0.840542] rt3050-esw 10110000.esw: mediatek esw at 0xb0110000, irq 25 initialized
+[    0.856998] mtk_soc_eth 10100000.ethernet eth0: mediatek frame engine at 0xb0100000, irq 5
+[    0.876930] NET: Registered PF_INET6 protocol family
+[    0.893393] Segment Routing with IPv6
+[    0.900812] In-situ OAM (IOAM) with IPv6
+[    0.908860] NET: Registered PF_PACKET protocol family
+[    0.918947] 8021q: 802.1Q VLAN Support v1.8
+[    0.961289] clk: Disabling unused clocks
+[    0.977954] VFS: Mounted root (squashfs filesystem) readonly on device 31:5.
+[    0.998710] Freeing unused kernel image (initmem) memory: 1212K
+[    1.010513] This architecture does not have kernel memory protection.
+[    1.023304] Run /sbin/init as init process
+[    1.031411]   with arguments:
+[    1.031423]     /sbin/init
+[    1.031435]   with environment:
+[    1.031446]     HOME=/
+[    1.031457]     TERM=linux
+[    3.394344] init: Console is alive
+[    3.401676] init: - watchdog -
+[    5.474963] rt3050-esw 10110000.esw: port 1 link up
+[    5.890307] kmodloader: loading kernel modules from /etc/modules-boot.d/*
+[    6.373512] usbcore: registered new interface driver usbfs
+[    6.384672] usbcore: registered new interface driver hub
+[    6.395493] usbcore: registered new device driver usb
+[    6.410928] gpio_button_hotplug: loading out-of-tree module taints kernel.
+[    6.450234] phy phy-10120000.usbphy.0: remote usb device wakeup disabled
+[    6.463583] phy phy-10120000.usbphy.0: UTMI 16bit 30MHz
+[    6.473957] ehci-platform 101c0000.ehci: EHCI Host Controller
+[    6.485401] ehci-platform 101c0000.ehci: new USB bus registered, assigned bus number 1
+[    6.501332] ehci-platform 101c0000.ehci: irq 26, io mem 0x101c0000
+[    6.532986] ehci-platform 101c0000.ehci: USB 2.0 started, EHCI 1.00
+[    6.547376] hub 1-0:1.0: USB hub found
+[    6.555409] hub 1-0:1.0: 1 port detected
+[    6.576052] ohci-platform 101c1000.ohci: Generic Platform OHCI controller
+[    6.589654] ohci-platform 101c1000.ohci: new USB bus registered, assigned bus number 2
+[    6.605546] ohci-platform 101c1000.ohci: irq 26, io mem 0x101c1000
+[    6.678808] hub 2-0:1.0: USB hub found
+[    6.686933] hub 2-0:1.0: 1 port detected
+[    6.719033] kmodloader: done loading kernel modules from /etc/modules-boot.d/*
+[    6.764717] init: - preinit -
+[   12.253001] random: crng init done
+[   15.210418] rt3050-esw 10110000.esw: port 1 link down
+[   19.797842] rt3050-esw 10110000.esw: port 1 link up
+[   21.618662] jffs2: notice: (365) jffs2_build_xattr_subsystem: complete building xattr subsystem, 31 of xdatum (30 unchecked, 1 orphan) and 46 of xref (8 dead, 0 orphan) found.
+[   21.652402] mount_root: switching to jffs2 overlay
+[   21.669099] overlayfs: upper fs does not support tmpfile.
+[   21.690073] urandom-seed: Seeding with /etc/urandom.seed
+[   21.794787] procd: - early -
+[   21.800869] procd: - watchdog -
+[   23.233286] procd: - watchdog -
+[   23.742364] procd: - ubus -
+[   24.371529] procd: - init -
+[   30.164393] kmodloader: loading kernel modules from /etc/modules.d/*
+[   31.569621] zram: Added device: zram0
+[   32.103264] usbcore: registered new interface driver cdc_wdm
+[   32.134087] Loading modules backported from Linux version v6.16-0-g038d61fd6422
+[   32.148694] Backport generated by backports.git v6.1.145-1-47-g6194bf852a3e
+[   32.438637] usbcore: registered new interface driver usbserial_generic
+[   32.451815] usbserial: USB Serial support registered for generic
+[   32.625070] xt_time: kernel timezone is -0000
+[   32.655887] usbcore: registered new interface driver cdc_ether
+[   32.697250] usbcore: registered new interface driver cdc_ncm
+[   32.743652] urngd: v1.0.2 started.
+[   33.057486] usbcore: registered new interface driver huawei_cdc_ncm
+[   33.288054] mt76_wmac 10300000.wmac: ASIC revision: 76280001
+[   33.416432] mt76_wmac 10300000.wmac: Firmware Version: 20151201
+[   33.428290] mt76_wmac 10300000.wmac: Build Time: 20151201183641
+[   33.513003] mt76_wmac 10300000.wmac: firmware init done
+[   33.695662] mt76_wmac 10300000.wmac: registering led 'mt76-phy0'
+[   33.765072] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+[   34.091389] PPP generic driver version 2.4.2
+[   34.148469] usbcore: registered new interface driver qmi_wwan
+[   34.296234] usbcore: registered new interface driver option
+[   34.307506] usbserial: USB Serial support registered for GSM modem (1-port)
+[   34.415033] usbcore: registered new interface driver qcserial
+[   34.426656] usbserial: USB Serial support registered for Qualcomm USB modem
+[   34.530959] kmodloader: done loading kernel modules from /etc/modules.d/*
+[   66.120564] rt3050-esw 10110000.esw: port 1 link down
+[   70.708314] rt3050-esw 10110000.esw: port 1 link up
+[   78.777479] br-lan: port 1(eth0.1) entered blocking state
+[   78.789431] br-lan: port 1(eth0.1) entered disabled state
+[   78.800244] eth0.1: entered allmulticast mode
+[   78.808926] mtk_soc_eth 10100000.ethernet eth0: entered allmulticast mode
+[   78.822818] eth0.1: entered promiscuous mode
+[   78.831357] mtk_soc_eth 10100000.ethernet eth0: entered promiscuous mode
+[   78.871302] br-lan: port 1(eth0.1) entered blocking state
+[   78.882133] br-lan: port 1(eth0.1) entered forwarding state
+[  147.793703] phy0-sta0: authenticate with 22:f3:e6:4d:81:6d (local address=88:12:7d:00:c0:2c)
+[  147.810535] phy0-sta0: send auth to 22:f3:e6:4d:81:6d (try 1/3)
+[  147.927023] phy0-sta0: authenticated
+[  147.943100] phy0-sta0: associate with 22:f3:e6:4d:81:6d (try 1/3)
+[  147.962565] phy0-sta0: RX AssocResp from 22:f3:e6:4d:81:6d (capab=0x1431 status=0 aid=3)
+[  147.979107] phy0-sta0: associated
+[ 1520.202964] usb 1-1: new high-speed USB device number 2 using ehci-platform
+[ 1522.693250] usb 1-1: USB disconnect, device number 2
+[ 1527.282954] usb 1-1: new high-speed USB device number 3 using ehci-platform
+[ 1683.992223] usb 1-1: USB disconnect, device number 3
+[ 1692.602960] usb 1-1: new high-speed USB device number 4 using ehci-platform
+[ 1695.091564] usb 1-1: USB disconnect, device number 4
+[ 1699.682956] usb 1-1: new high-speed USB device number 5 using ehci-platform
+[ 1835.033555] usb 1-1: USB disconnect, device number 5
+[ 1979.713015] usb 1-1: new high-speed USB device number 6 using ehci-platform
+[ 1982.198935] usb 1-1: USB disconnect, device number 6
+[ 1986.782987] usb 1-1: new high-speed USB device number 7 using ehci-platform
+[ 1993.127005] option 1-1:1.2: GSM modem (1-port) converter detected
+[ 1993.142389] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB0
+[ 1993.159116] option 1-1:1.3: GSM modem (1-port) converter detected
+[ 1993.173427] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB1
+[ 1993.190190] option 1-1:1.4: GSM modem (1-port) converter detected
+[ 1993.204535] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB2
+[ 2003.627230] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+[ 2003.645094] option 1-1:1.2: device disconnected
+[ 2003.657315] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+[ 2003.675530] option 1-1:1.3: device disconnected
+[ 2003.687747] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+[ 2003.705963] option 1-1:1.4: device disconnected
+[ 2004.869804] option 1-1:1.2: GSM modem (1-port) converter detected
+[ 2004.882455] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB0
+[ 2004.897382] option 1-1:1.3: GSM modem (1-port) converter detected
+[ 2004.909955] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB1
+[ 2004.924916] option 1-1:1.4: GSM modem (1-port) converter detected
+[ 2004.937522] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB2
+[ 2126.552091] usb 1-1: USB disconnect, device number 7
+[ 2126.565135] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+[ 2126.583040] option 1-1:1.2: device disconnected
+[ 2126.595272] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+[ 2126.613507] option 1-1:1.3: device disconnected
+[ 2126.625750] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+[ 2126.643963] option 1-1:1.4: device disconnected
+[ 2126.656437] ttyS ttyS0: 1 input overrun(s)
+[ 3486.702926] usb 1-1: new high-speed USB device number 8 using ehci-platform
+[ 3489.187026] usb 1-1: USB disconnect, device number 8
+[ 3493.772926] usb 1-1: new high-speed USB device number 9 using ehci-platform
+[ 3493.962632] option 1-1:1.2: GSM modem (1-port) converter detected
+[ 3493.975266] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB0
+[ 3494.034090] option 1-1:1.3: GSM modem (1-port) converter detected
+[ 3494.046668] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB1
+[ 3494.105274] option 1-1:1.4: GSM modem (1-port) converter detected
+[ 3494.118204] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB2
+[ 3793.314022] usb 1-1: USB disconnect, device number 9
+[ 3793.324969] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+[ 3793.341161] option 1-1:1.2: device disconnected
+[ 3793.350872] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+[ 3793.367039] option 1-1:1.3: device disconnected
+[ 3793.376747] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+[ 3793.392990] option 1-1:1.4: device disconnected
+[ 3816.332926] usb 1-1: new high-speed USB device number 10 using ehci-platform
+[ 3818.822027] usb 1-1: USB disconnect, device number 10
+[ 3823.402921] usb 1-1: new high-speed USB device number 11 using ehci-platform
+[ 3823.597939] option 1-1:1.2: GSM modem (1-port) converter detected
+[ 3823.610571] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB0
+[ 3823.662996] option 1-1:1.3: GSM modem (1-port) converter detected
+[ 3823.675554] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB1
+[ 3823.724046] option 1-1:1.4: GSM modem (1-port) converter detected
+[ 3823.736639] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB2
