@@ -21,22 +21,14 @@ config wifi-iface 'sta'
         option device 'radio0'
         option mode 'sta'
         option network 'wwan'
-        option ssid 'H158-381_814D'
+        option ssid ''
         option encryption 'psk2'
-        option key 'EMq4aMNTeDL'
+        option key ''
         option ieee80211w '0'
 
-# Local AP (for clients)
-config wifi-iface 'ap'
-        option device 'radio0'
-        option mode 'ap'
-        option network 'lan'
-        option ssid 'OpenWrt_Ext'
-        option encryption 'psk2'
-        option key 'MyRepeater123'
-        option ieee80211w '0'
+
 ```
-✅ both AP + STA auto-sync to the same channel (single-radio repeater).
+
 
 ---
 
@@ -104,9 +96,6 @@ ifup wwan
 ---
 
 ## 🧾 Operational Summary
-- Router joins **H158-381_814D** on ch9.  
-- Rebroadcasts as **OpenWrt_Ext (MyRepeater123)**.  
 - NAT and DHCP working on 192.168.1.1.  
-- Auto-sync keeps both on same channel after reboots.  
 - Watchdog repairs link if upstream fails.  
 - Full persistence across power cycles.
