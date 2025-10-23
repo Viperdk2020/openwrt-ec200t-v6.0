@@ -1,0 +1,32 @@
+#!/bin/sh
+
+[ "${ACTION}" = "add" ] || exit 0
+
+modprobe usbserial 2>/dev/null || true
+modprobe option 2>/dev/null || true
+modprobe cdc_acm 2>/dev/null || true
+modprobe cdc_ether 2>/dev/null || true
+modprobe rndis_host 2>/dev/null || true
+
+bind_option_id() {
+    local vid="$1"
+    local pid="$2"
+    [ -e /sys/bus/usb-serial/drivers/option/new_id ] || return 0
+    echo "$vid $pid ff" > /sys/bus/usb-serial/drivers/option/new_id 2>/dev/null || true
+}
+
+case "${PRODUCT}" in
+    1286/4e3c/*)
+        bind_option_id 1286 4e3c
+        ;;
+    2c7c/6026/*)
+        bind_option_id 2c7c 6026
+        ;;
+    *)
+        # try common IDs even if PRODUCT is empty
+        bind_option_id 1286 4e3c
+        bind_option_id 2c7c 6026
+        ;;
+esac
+
+exit 0

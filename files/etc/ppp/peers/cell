@@ -1,0 +1,20 @@
+device /dev/ttyUSB3
+115200
+crtscts
+lock
+noauth
+noipdefault
+usepeerdns
+ipcp-accept-remote
+ipcp-accept-local
+novj
+nobsdcomp
+nodeflate
+persist
+maxfail 0
+holdoff 5
+lcp-echo-interval 30
+lcp-echo-failure 6
+lcp-echo-adaptive
+defaultroute
+connect "/usr/sbin/chat -v -s -S -t 45 -f /etc/ppp/chatscripts/cell.chat"
