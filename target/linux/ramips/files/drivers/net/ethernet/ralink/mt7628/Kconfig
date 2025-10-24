@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0
+menu "MediaTek/Ralink MT7628 Ethernet"
+config NET_RALINK_MT7628
+    tristate "Ralink/MediaTek MT7628 Ethernet (FE + internal switch)"
+    depends on MIPS && NETDEVICES && ETHERNET
+    depends on OF
+    select PHYLIB
+    select FIXED_PHY
+    help
+      MT7628-only FE + internal switch driver (swconfig). Autopoll and
+      PHY power are derived from DTS-declared PHY ports.
+endmenu
