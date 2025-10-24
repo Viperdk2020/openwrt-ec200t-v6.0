@@ -1,0 +1,4 @@
+# Keep GitHub metadata directory tidy
+*.log
+*.tmp
+*.bak
