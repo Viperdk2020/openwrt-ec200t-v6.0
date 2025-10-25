@@ -15,6 +15,8 @@
 #ifndef _RALINK_MDIO_H__
 #define _RALINK_MDIO_H__
 
+struct device_node;
+
 #ifdef CONFIG_NET_RALINK_MDIO
 int fe_mdio_init(struct fe_priv *priv);
 void fe_mdio_cleanup(struct fe_priv *priv);
@@ -22,7 +24,8 @@ int fe_connect_phy_node(struct fe_priv *priv,
 			struct device_node *phy_node,
 			int port);
 #else
-static inline int fe_mdio_init(struct fe_priv *priv) { return 0; }
-static inline void fe_mdio_cleanup(struct fe_priv *priv) {}
+int fe_mdio_init(struct fe_priv *priv);
+void fe_mdio_cleanup(struct fe_priv *priv);
+int fe_connect_phy_node(struct fe_priv *priv, struct device_node *phy_node, int port);
 #endif
 #endif

@@ -18,4 +18,4 @@ obj-$(CONFIG_NET_RALINK_GSW_MT7620)		+= gsw_mt7620.o mt7530.o
 obj-$(CONFIG_NET_RALINK_SOC)			+= ralink-eth.o
 
 # MediaTek MT7628 Ethernet driver in subdirectory
-obj-$(CONFIG_RAETH_MT7628) += mt7628/
+obj-$(CONFIG_NET_RALINK_MT7628) += mt7628/

@@ -6,7 +6,7 @@
 # directory; Kbuild supports relative paths here.
 ###############################################################################
 
-obj-$(CONFIG_RAETH_MT7628) += mt7628.o
+obj-$(CONFIG_NET_RALINK_MT7628) += mt7628.o
 
 mt7628-objs := \
 	gsw_mt7620.o \

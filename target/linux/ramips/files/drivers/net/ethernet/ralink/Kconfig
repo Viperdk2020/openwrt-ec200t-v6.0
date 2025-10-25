@@ -61,7 +61,7 @@ endif
 # Additional driver selections
 #
 
-config RAETH_MT7628
+config NET_RALINK_MT7628
 	tristate "MediaTek MT7628 Ethernet Support"
 	depends on RALINK || ARCH_MT7628
 	help
