@@ -183,6 +183,14 @@ static void mt7628_apply_dts_power_mask(struct mt7620_gsw *gsw)
 	int i;
 	u32 val;
 
+	/* If DTS did not contribute an autopoll mask, fall back to the
+	 * upstream behaviour and keep all EPHY ports enabled. Many MT7628
+	 * boards still rely on the legacy switch bindings without per-port
+	 * phy-handle nodes, so gsw->autopoll remains unset.
+	 */
+	if (!gsw->autopoll)
+		return;
+
 	for (i = 0; i <= 4; i++) {
 		val = _mt7620_mii_read(gsw, gsw->ephy_base + i, MII_BMCR);
 		if (gsw->autopoll & BIT(i)) {
