@@ -1,6 +1,6 @@
 # AGENTS.md — Source Build Mode (MT7628NN)
 
-Operational playbook for Codex Cloud **source builds** of OpenWrt for the MT7628NN 4G router. This replaces ImageBuilder-centric flows.
+Operational playbook for Codex Cloud source builds of OpenWrt for the MT7628NN 4G router. This replaces ImageBuilder-centric flows.
 
 ---
 
@@ -94,7 +94,7 @@ You are the Release Agent. Produce sha256sums for all *jbc.bin files. Generate R
 
 **Goal:** On cached containers, refresh minimal tools, feeds, ccache, optional swap.
 
-* **Prompt hint:** run lightweight updates and `./scripts/feeds update -a && install -a` if `${SRC_DIR}` exists.
+**Prompt hint:** run lightweight updates and `./scripts/feeds update -a && install -a` if `${SRC_DIR}` exists.
 
 ---
 
@@ -205,3 +205,4 @@ sha256sum bin/targets/.../*jbc.bin
 ---
 
 *Save this file at the repo root as `AGENTS.md`.*
+
