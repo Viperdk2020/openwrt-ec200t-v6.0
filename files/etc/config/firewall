@@ -1,27 +1,26 @@
 config defaults
-        option input 'ACCEPT'
-        option output 'ACCEPT'
-        option forward 'REJECT'
+  option input 'ACCEPT'
+  option output 'ACCEPT'
+  option forward 'REJECT'
 
 config zone
-        option name 'lan'
-        list network 'lan'
-        option input 'ACCEPT'
-        option output 'ACCEPT'
-        option forward 'REJECT'
+  option name 'lan'
+  list network 'lan'
+  option input 'ACCEPT'
+  option output 'ACCEPT'
+  option forward 'ACCEPT'
 
 config zone
-        option name 'wan'
-        list network 'wwan'
-        list network 'cell'
-        list network 'usb'
-        option input 'REJECT'
-        option output 'ACCEPT'
-        option forward 'REJECT'
-        option masq '1'
-        option mtu_fix '1'
+  option name 'wan'
+  list network 'wwan'
+  list network 'cell'
+  list network 'usb0'
+  option input 'REJECT'
+  option output 'ACCEPT'
+  option forward 'REJECT'
+  option masq '1'
+  option mtu_fix '1'
 
 config forwarding
-        option src 'lan'
-        option dest 'wan'
-
+  option src 'lan'
+  option dest 'wan'

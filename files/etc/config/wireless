@@ -1,19 +1,12 @@
 config wifi-device 'radio0'
-        option type 'mac80211'
-        option path 'platform/10300000.wmac'
-        option band '2g'
-        option country 'DK'
-        option htmode 'HT20'
-        option legacy_rates "0"
-        option cell_density "0"
-        option noscan "1"
+  option type 'mac80211'
+  option path 'platform/10300000.wmac'
+  option htmode 'HT20'
+  option country 'DK'
 
-config wifi-iface 'sta'
-        option device 'radio0'
-        option mode 'sta'
-        option network 'wwan'
-        option ssid 'H158-381_814D'
-        option encryption 'psk2'
-        option key 'EMq4aMNTeDL'
-        option powersave '0'
-
+config wifi-iface 'wwan'
+  option device 'radio0'
+  option mode 'sta'
+  option ssid 'UPSTREAM_SSID'
+  option encryption 'psk2'
+  option key 'UPSTREAM_PASSWORD'

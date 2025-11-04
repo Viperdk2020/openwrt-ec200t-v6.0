@@ -358,6 +358,8 @@ You are the Release Agent. Produce sha256sums for all *jbc.bin files. Generate R
 
 **Prompt hint:** run lightweight updates and `./scripts/feeds update -a && install -a` if `${SRC_DIR}` exists.
 
+- **Checklist:** Review `TODO.md` before making changes so outstanding tasks stay aligned.
+
 ---
 
 ## 2) Environment & Variables

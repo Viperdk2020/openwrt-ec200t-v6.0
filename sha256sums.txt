@@ -1,2 +1,4 @@
-864b516a318d63197fc1c173598a43c32de0e95cd9dc12546d293653f9f36bec  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-initramfs-kernel-jbc.bin
-30bd07c6376abf8e8df3c16c88c8ddc5dc16c3dbaf6a6fecf252ecbc158c66b9  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-squashfs-sysupgrade-jbc.bin
+058da9aaa4efe78883e6783533ccae0442bc5062040abd9dbcd9ad82067f99d2  bin/targets/ramips/mt76x8/openwrt-ec200t-v1-r31588+1-0861bb7405-ramips-mt76x8-custom_ec200t-initramfs-kernel-jbc.bin
+83ac44fb33c1518d50cb85b463a89165a81f1941aea4587545243c0195431cdb  bin/targets/ramips/mt76x8/openwrt-ec200t-v1-r31588+1-0861bb7405-ramips-mt76x8-custom_ec200t-squashfs-sysupgrade-jbc.bin
+593af5e7b485c35ea28bbf498d8ae55aafe970b369b584374bef89959035b4af  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-initramfs-kernel-jbc.bin
+ae9c3322d13a8b8404eb7ac65117d0d582973ec59e5e92e6ab8f6ba3abab340a  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-squashfs-sysupgrade-jbc.bin

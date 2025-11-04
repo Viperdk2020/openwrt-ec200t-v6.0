@@ -1,12 +1,8 @@
-/dev/ttyUSB3
-115200
 connect "/usr/sbin/chat -v -f /etc/ppp/chat-connect"
-disconnect "/usr/sbin/chat -v -f /etc/ppp/chat-disconnect"
 noauth
 defaultroute
 usepeerdns
 persist
-noipdefault
-hide-password
-novj
-
+nodetach
+debug
+call-provider
