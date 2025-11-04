@@ -1448,3 +1448,17 @@ define Device/teltonika_rut241
   IMAGE/sysupgrade.bin := append-kernel | pad-to $$$$(BLOCKSIZE) | append-rootfs | pad-rootfs | check-size | append-metadata
 endef
 TARGET_DEVICES += teltonika_rut241
+
+# Custom EC200T (MT7628AN) device image definition
+# Flash layout: 16 MiB, firmware @ 0x050000 size 0xFB0000 (~16064 KiB)
+# Note: Bootloader expects vendor uImage magic 0x27151967 for RAM/TFTP.
+#       Build standard OpenWrt images here; wrap externally if needed.
+define Device/custom_ec200t
+  SOC := mt7628an
+  DEVICE_VENDOR := Custom
+  DEVICE_MODEL := EC200T LTE Router
+  DEVICE_DTS := mt7628an_custom_ec200t
+  IMAGE_SIZE := 16064k
+  SUPPORTED_DEVICES += custom,ec200t custom,ec200t-router ec200t-router
+endef
+TARGET_DEVICES += custom_ec200t

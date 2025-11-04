@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+/dts-v1/;
+#include "mt7628an.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+
+/ {
+    compatible = "custom,ec200t-router", "ec200t,mt7628n-ec200t-lte-router", "mediatek,mt7628n-soc", "mediatek,mt7628an-soc";
+    model = "EC200T LTE Router (MT7628N, 2xRJ45, LTE USB)";
+
+    chosen {
+        bootargs = "console=ttyS0,57600";
+    };
+
+    memory@0 {
+        device_type = "memory";
+        reg = <0x0 0x4000000>; /* 64 MiB from boot log */
+    };
+
+    aliases {
+        led-boot = &led_sys;
+        led-failsafe = &led_sys;
+        led-running = &led_sys;
+        led-upgrade = &led_sys;
+    };
+
+    /* Optional LED block (safe to remove or change GPIO later) */
+    leds {
+        compatible = "gpio-leds";
+        led_sys: sys {
+            label = "ec200t:green:sys";
+            gpios = <&gpio 44 GPIO_ACTIVE_LOW>; /* adjust if needed */
+            default-state = "on";
+        };
+    };
+};
+
+/* ---------------- Ethernet MAC + Embedded Switch (legacy ESW) --------------- */
+
+&ethernet {
+    compatible = "mediatek,mt7628-eth", "ralink,rt5350-eth";
+    status = "okay";
+
+    /* Pull base MAC from factory 0x04 */
+    nvmem-cells = <&macaddr_factory_4>;
+    nvmem-cell-names = "mac-address";
+};
+
+&esw {
+    compatible = "mediatek,mt7628-gsw", "mediatek,mt7620-gsw";
+    status = "okay";
+
+    /* Enable only ports 0,1 and CPU port 5 for a 2-port board */
+    mediatek,portmap = <0x23>; /* bits: 0,1,5 */
+    mediatek,led_polarity = <0x0>;
+};
+
+/* ---------------- Wi-Fi (internal MT7628) ----------------------------------- */
+
+&wmac {
+    status = "okay";
+    /* Cal data in factory@0, MAC also available at factory@0x4 */
+    nvmem-cells = <&eeprom_factory_0 &macaddr_factory_4>;
+    nvmem-cell-names = "eeprom", "mac-address";
+};
+
+/* ---------------- Factory NVMEM cells are defined inside SPI partition ------ */
+
+/* ---------------- SPI-NOR flash layout (16 MiB) ---------------------------- */
+
+&spi0 {
+    status = "okay";
+
+    flash@0 {
+        compatible = "jedec,spi-nor";
+        reg = <0>;
+        spi-max-frequency = <10000000>;
+
+        partitions {
+            compatible = "fixed-partitions";
+            #address-cells = <1>;
+            #size-cells = <1>;
+
+            partition@0 {
+                label = "u-boot";
+                reg = <0x00000 0x30000>;
+                read-only;
+            };
+
+            partition@30000 {
+                label = "u-boot-env";
+                reg = <0x30000 0x10000>;
+                read-only;
+            };
+
+            partition@40000 {
+                label = "factory";
+                reg = <0x40000 0x10000>;
+                read-only;
+
+                nvmem-layout {
+                    compatible = "fixed-layout";
+                    #address-cells = <1>;
+                    #size-cells = <1>;
+
+                    eeprom_factory_0: eeprom@0 {
+                        reg = <0x0 0x400>;
+                    };
+
+                    macaddr_factory_4: macaddr@4 {
+                        reg = <0x4 0x6>;
+                    };
+                };
+            };
+
+            partition@50000 {
+                compatible = "openwrt,uimage", "denx,uimage";
+                openwrt,ih-magic = <0x27151967>;
+                label = "firmware";
+                reg = <0x50000 0xfb0000>;
+            };
+        };
+    };
+};

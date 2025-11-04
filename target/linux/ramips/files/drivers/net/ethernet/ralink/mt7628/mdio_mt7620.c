@@ -15,24 +15,29 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/types.h>
+#include <linux/delay.h>
 
 #include "mtk_eth_soc.h"
 #include "gsw_mt7620.h"
 #include "mdio.h"
 
+#define GSW_MDIO_RETRY_LIMIT	2
+#define GSW_MDIO_RETRY_DELAY_US	1000
+
 static int mt7620_mii_busy_wait(struct mt7620_gsw *gsw)
 {
-	unsigned long t_start = jiffies;
+	int retry;
 
-	while (1) {
+	for (retry = 0; retry < GSW_MDIO_RETRY_LIMIT; retry++) {
 		if (!(mtk_switch_r32(gsw, MT7620A_GSW_REG_PIAC) & GSW_MDIO_ACCESS))
 			return 0;
-		if (time_after(jiffies, t_start + GSW_REG_PHY_TIMEOUT))
-			break;
+
+		udelay(GSW_MDIO_RETRY_DELAY_US);
 	}
 
-	dev_err(gsw->dev, "mdio: MDIO timeout\n");
-	return -1;
+	dev_err(gsw->dev, "mdio: MDIO timeout after %d retries\n",
+		GSW_MDIO_RETRY_LIMIT);
+	return -ETIMEDOUT;
 }
 
 u32 _mt7620_mii_write(struct mt7620_gsw *gsw, u32 phy_addr,

@@ -1,0 +1,2 @@
+864b516a318d63197fc1c173598a43c32de0e95cd9dc12546d293653f9f36bec  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-initramfs-kernel-jbc.bin
+30bd07c6376abf8e8df3c16c88c8ddc5dc16c3dbaf6a6fecf252ecbc158c66b9  bin/targets/ramips/mt76x8/openwrt-ramips-mt76x8-custom_ec200t-squashfs-sysupgrade-jbc.bin

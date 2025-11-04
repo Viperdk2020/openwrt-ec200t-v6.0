@@ -1,0 +1,10 @@
+#!/bin/sh
+[ "$ACTION" = "add" ] || exit 0
+case "$PRODUCT" in
+  1286/4e3c/*|2c7c/6026/*)
+    modprobe option 2>/dev/null
+    echo "1286 4e3c" > /sys/bus/usb-serial/drivers/option1/new_id 2>/dev/null
+    echo "2c7c 6026" > /sys/bus/usb-serial/drivers/option1/new_id 2>/dev/null
+  ;;
+esac
+

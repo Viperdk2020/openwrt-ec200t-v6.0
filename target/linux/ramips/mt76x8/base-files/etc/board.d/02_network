@@ -247,6 +247,11 @@ ramips_setup_interfaces()
 		ucidef_add_switch "switch0" \
 			"0:lan:2" "1:lan:1" "4:wan" "6@eth0"
 		;;
+	custom,ec200t-router)
+		# 2x RJ45 as LAN only; WAN via Wi‑Fi/cellular
+		ucidef_add_switch "switch0" \
+			"0:lan" "1:lan" "6@eth0"
+		;;
 	esac
 }
 
