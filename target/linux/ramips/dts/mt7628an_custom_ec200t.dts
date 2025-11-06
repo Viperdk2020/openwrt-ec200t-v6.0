@@ -38,21 +38,14 @@
 /* ---------------- Ethernet MAC + Embedded Switch (legacy ESW) --------------- */
 
 &ethernet {
-    compatible = "mediatek,mt7628-eth", "ralink,rt5350-eth";
-    status = "okay";
-
     /* Pull base MAC from factory 0x04 */
     nvmem-cells = <&macaddr_factory_4>;
     nvmem-cell-names = "mac-address";
 };
 
 &esw {
-    compatible = "mediatek,mt7628-gsw", "mediatek,mt7620-gsw";
-    status = "okay";
-
     /* Enable only ports 0,1 and CPU port 5 for a 2-port board */
     mediatek,portmap = <0x23>; /* bits: 0,1,5 */
-    mediatek,led_polarity = <0x0>;
 };
 
 /* ---------------- Wi-Fi (internal MT7628) ----------------------------------- */

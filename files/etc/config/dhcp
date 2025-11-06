@@ -20,6 +20,6 @@ config dhcp 'lan'
   option limit '150'
   option leasetime '12h'
 
-config dhcp 'wan'
-  option interface 'wan'
+config dhcp 'wwan'
+  option interface 'wwan'
   option ignore '1'

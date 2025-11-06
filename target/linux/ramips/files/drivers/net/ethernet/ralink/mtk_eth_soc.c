@@ -32,6 +32,7 @@
 #include <linux/bug.h>
 #include <linux/netfilter.h>
 #include <net/netfilter/nf_flow_table.h>
+#include <linux/of_gpio.h>
 #include <linux/gpio.h>
 #include <linux/gpio/consumer.h>
 
@@ -1637,7 +1638,7 @@ static int fe_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static void fe_remove(struct platform_device *pdev)
+static int fe_remove(struct platform_device *pdev)
 {
 	struct net_device *dev = platform_get_drvdata(pdev);
 	struct fe_priv *priv = netdev_priv(dev);
@@ -1647,6 +1648,8 @@ static void fe_remove(struct platform_device *pdev)
 	cancel_work_sync(&priv->pending_work);
 
 	platform_set_drvdata(pdev, NULL);
+
+	return 0;
 }
 
 static struct platform_driver fe_driver = {

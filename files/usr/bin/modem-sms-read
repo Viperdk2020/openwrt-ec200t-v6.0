@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Simple helper to list SMS stored on the modem SIM.
+
+PORT="${1:-/dev/ttyUSB2}"
+STORAGE="${2:-SM}"
+
+if [ ! -c "$PORT" ]; then
+  echo "modem-sms-read: modem port $PORT not found" >&2
+  exit 1
+fi
+
+if ! command -v atinout >/dev/null 2>&1; then
+  echo "modem-sms-read: atinout is not installed" >&2
+  exit 1
+fi
+
+cat <<EOF | atinout - "$PORT" -
+AT
+AT+CMGF=1
+AT+CPMS="${STORAGE}","${STORAGE}","${STORAGE}"
+AT+CMGL="ALL"
+EOF

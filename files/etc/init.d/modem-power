@@ -1,0 +1,68 @@
+#!/bin/sh /etc/rc.common
+
+START=15
+STOP=90
+USE_PROCD=0
+
+PWR_GPIO=513     # MT7628 GPIO1 (PWR_EN)
+RST_GPIO=516     # MT7628 GPIO4 (RESET_N, active-low)
+PWR_HOLD=8       # seconds to hold PWR_EN high
+
+log() {
+	logger -t modem-power "$*"
+}
+
+gpio_export() {
+	local gpio="$1"
+	[ -d "/sys/class/gpio/gpio${gpio}" ] || echo "${gpio}" > /sys/class/gpio/export
+}
+
+gpio_direction_out() {
+	local gpio="$1"
+	echo out > "/sys/class/gpio/gpio${gpio}/direction"
+}
+
+gpio_set() {
+	local gpio="$1"
+	local val="$2"
+	echo "${val}" > "/sys/class/gpio/gpio${gpio}/value"
+}
+
+bind_option_id() {
+	local node
+	for node in /sys/bus/usb-serial/drivers/option/new_id \
+		    /sys/bus/usb-serial/drivers/option1/new_id
+	do
+		[ -w "${node}" ] || continue
+		echo "1286 4e3c ff" > "${node}" 2>/dev/null || true
+		echo "2c7c 6026 ff" > "${node}" 2>/dev/null || true
+		return 0
+	done
+	return 1
+}
+
+start() {
+	log "initialising EC200T power rails"
+
+	gpio_export "${PWR_GPIO}"
+	gpio_export "${RST_GPIO}"
+
+	gpio_direction_out "${PWR_GPIO}"
+	gpio_direction_out "${RST_GPIO}"
+
+	# ensure RESET_N stays high
+	gpio_set "${RST_GPIO}" 1
+
+	# pulse PWR_EN high long enough for the modem to latch
+	gpio_set "${PWR_GPIO}" 1
+	sleep "${PWR_HOLD}"
+	gpio_set "${PWR_GPIO}" 0
+
+	# load/bind supporting USB drivers (idempotent)
+	for mod in usbserial option cdc_acm cdc_ether rndis_host; do
+		modprobe "${mod}" 2>/dev/null || true
+	done
+	bind_option_id || log "warning: option driver new_id not available yet"
+
+	log "EC200T power sequence complete"
+}

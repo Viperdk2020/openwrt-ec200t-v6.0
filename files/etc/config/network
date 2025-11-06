@@ -4,6 +4,16 @@ config interface 'loopback'
   option ipaddr '127.0.0.1'
   option netmask '255.0.0.0'
 
+config switch
+  option name 'switch0'
+  option reset '1'
+  option enable_vlan '1'
+
+config switch_vlan
+  option device 'switch0'
+  option vlan '1'
+  option ports '0 1 5t'
+
 config device
   option name 'br-lan'
   option type 'bridge'
@@ -27,13 +37,13 @@ config interface 'cell'
   option defaultroute '1'
   option delegate '0'
   option ipv6 '0'
-  option username '""'
-  option password '""'
+  option username ''
+  option password ''
   option dialnumber '*99#'
   option device '/dev/ttyUSB3'
   option apn 'YOUR_APN'
 
 config interface 'usb0'
-  option ifname 'usb0'
+  option device 'usb0'
   option proto 'dhcp'
   option metric '30'
